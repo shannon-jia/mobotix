@@ -66,11 +66,11 @@ def main(spk_svr, release_time, amqp, port, qid, debug,
     # main process
     try:
         site = Speaker_Adam(loop, spk_svr, release_time)
-        router = RouterMQ(outgoing_key='Alarms.speaker',
-                          routing_keys=['Actions.speaker'],
+        router = RouterMQ(outgoing_key='Alarms.mobotix',
+                          # routing_keys=['Actions.speaker'],
                           queue_name='speaker_'+str(qid),
                           url=amqp)
-        router.set_callback(site.got_command)
+        # router.set_callback(site.got_command)
         site.set_publish(router.publish)
         api = Api(loop=loop, port=port, site=site, amqp=router)
         site.start()

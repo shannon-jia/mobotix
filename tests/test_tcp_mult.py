@@ -5,9 +5,9 @@ from time import sleep
 #处理客户端请求，并为其提供服务
 def dealWithClient(newSocket,destAddr):
     while True:
-        recvData = newSocket.recv(1024)
+        recvData = newSocket.recv(1024).decode('utf-8')
         if len(recvData)>0:
-            print('recv[%s]:%s'%(str(destAddr),recvData.decode('utf-8')))
+            print('recv[%s]:%s'%(str(destAddr),recvData))
         else:
             print('[%s]客户端已经关闭'%str(destAddr))
         break
