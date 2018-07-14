@@ -8,26 +8,48 @@ from multiprocessing import *
 import logging
 from urllib.parse import urlparse
 import asyncio
-# from .speaker import SpeakerV1
+
 log = logging.getLogger(__name__)
 
 
-class Speaker_Adam():
+class Mobotix():
     """
-    Spon Speaker system driver for SAM V1
+    MOBOTIX system driver for SAM V1
     """
 
     CLIENT_UDP_TIMEOUT = 5.0
 
     def __init__(self, loop, spk_svr):
-        # super().__init__(loop)
+        self.loop = loop or asyncio.get_event_loop()
         _url = urlparse(spk_svr)
         self.host = _url.hostname or 'localhost'
         self.port = _url.port or 9009
-        self.config_tcp_ser()
+
+        self.publish = None
+        self.actions = {}
+
+        self.mesg = {'camera': 'cam_01', 'mode': 'auto', 'time_stamp': '2018-07-13'}
+
+        # self.config_tcp_ser()
 
     def __str__(self):
-        return "Speaker V1 and Adam-6017 to triger speaker system"
+        return "MOBOTIX"
+
+    def get_info(self):
+        return {'actions': self.actions}
+
+    def set_publish(self, publish):
+        if callable(publish):
+            self.publish = publish
+        else:
+            self.publish = None
+
+    def start(self):
+        self._auto_loop()
+
+    def _auto_loop(self):
+        self.send(self.mesg)
+        self.loop.call_later(5, self._auto_loop)
 
     def config_tcp_ser(self):
         ser_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -50,7 +72,7 @@ class Speaker_Adam():
         while True:
             recv_data = new_sock.recv(1024).decode('utf-8')
             if len(recv_data) > 0:
-                self.deal_data(recv_data)
+                # self.deal_data(recv_data)
                 log.info('recv[{:s}]: {:s}'.format(str(dest_addr), recv_data))
             else:
                 log.warning('[{:s}] was closed!'.format(str(dest_addr)))
@@ -58,9 +80,10 @@ class Speaker_Adam():
         new_sock.close()
 
     def deal_data(self, recv_data):
-        data = json.loads(recv_data)
         import types
+        data = json.loads(recv_data)
         print(type(data), data)
+        self.send(data)
 
     def send(self, rep_msg):
         if callable(self.publish):
@@ -82,7 +105,7 @@ if __name__ == '__main__':
     loop = asyncio.get_event_loop()
 
     ser_url = 'tcp://localhost:9009'
-    Speaker_Adam(loop, ser_url)
+    Mobotix(loop, spk_svr)
 
     asyncio.sleep(10)
 

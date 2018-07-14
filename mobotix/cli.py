@@ -5,7 +5,7 @@
 import click
 from .log import get_log
 from .routermq import RouterMQ
-from .speaker_adam import Speaker_Adam
+from .mobotix import Mobotix
 from .api import Api
 import asyncio
 
@@ -18,11 +18,11 @@ def validate_url(ctx, param, value):
 
 
 @click.command()
-@click.option('--spk_svr', default='tcp://localhost:2048',
+@click.option('--spk_svr', default='tcp://localhost:9009',
               callback=validate_url,
               envvar='SPK_SVR',
               help='Speaker Server URL, \n \
-              ENV: SPK_SVR, default: tcp://localhost:2048')
+              ENV: SPK_SVR, default: tcp://localhost:9009')
 @click.option('--release_time', default=20,
               envvar='RELEASE_TIME',
               help='Release time for action, default=20, ENV: RELEASE_TIME')
@@ -65,10 +65,10 @@ def main(spk_svr, release_time, amqp, port, qid, debug,
 
     # main process
     try:
-        site = Speaker_Adam(loop, spk_svr, release_time)
+        site = Mobotix(loop, spk_svr)
         router = RouterMQ(outgoing_key='Alarms.mobotix',
-                          # routing_keys=['Actions.speaker'],
-                          queue_name='speaker_'+str(qid),
+                          # routing_keys=['Actions.mobotix'],
+                          queue_name='mobotix_'+str(qid),
                           url=amqp)
         # router.set_callback(site.got_command)
         site.set_publish(router.publish)
