@@ -6,6 +6,7 @@ import click
 from .log import get_log
 from .routermq import RouterMQ
 from .mobotix import Mobotix
+from .tcp_server import TcpServer
 from .api import Api
 import asyncio
 
@@ -33,7 +34,7 @@ def validate_url(ctx, param, value):
 @click.option('--port', default=80,
               envvar='SVC_PORT',
               help='Api port, default=80, ENV: SVC_PORT')
-@click.option('--qid', default=0,
+@click.option('--qid', default=1,
               envvar='SVC_QID',
               help='ID for amqp queue name, default=0, ENV: SVC_QID')
 @click.option('--debug', is_flag=True)
@@ -65,7 +66,7 @@ def main(spk_svr, release_time, amqp, port, qid, debug,
 
     # main process
     try:
-        site = Mobotix(loop, spk_svr)
+        site = Mobotix(loop)
         router = RouterMQ(outgoing_key='Alarms.mobotix',
                           # routing_keys=['Actions.mobotix'],
                           queue_name='mobotix_'+str(qid),
@@ -75,6 +76,8 @@ def main(spk_svr, release_time, amqp, port, qid, debug,
         api = Api(loop=loop, port=port, site=site, amqp=router)
         site.start()
         amqp_task = loop.create_task(router.reconnector())
+        # tcp_server = TcpServer(loop=loop, tcp_svr=spk_svr, site=site)
+        # tcp_server.start()
         api.start()
         loop.run_forever()
     except KeyboardInterrupt:

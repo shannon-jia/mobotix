@@ -114,7 +114,7 @@ class RouterMQ():
                 await self.queue.bind(self.exchange, routing_key)
             self.consumer = await self.queue.consume(self.handle_message)
         except asynqp.AMQPError as err:
-            log.error("Could not consume on queue".format(err))
+            log.error("Could not consume on queue.".format(err))
             if self.connection:
                 await self.connection.close()
         except Exception as err:
