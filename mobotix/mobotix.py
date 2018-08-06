@@ -75,7 +75,7 @@ class Mobotix():
             rep_msg['offset'] = 0
             rep_msg['time_stamp'] = mesg.get('time_stamp')
             rep_msg['source'] = 'publisher.protocols.ipp_host'
-            rep_msg['detail'] = mesg.get('camera')
+            rep_msg['detail'] = mesg.get('mode')
             rep_msg['remark'] = 'MOBOTIX'
             self.send(rep_msg)
         except Exception as e:
