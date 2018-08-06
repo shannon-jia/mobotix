@@ -6,7 +6,6 @@ import click
 from .log import get_log
 from .routermq import RouterMQ
 from .mobotix import Mobotix
-from .tcp_server import TcpServer
 from .api import Api
 import asyncio
 
@@ -19,14 +18,11 @@ def validate_url(ctx, param, value):
 
 
 @click.command()
-@click.option('--spk_svr', default='tcp://localhost:9009',
+@click.option('--mob_svr', default='tcp://0.0.0.0:9009',
               callback=validate_url,
-              envvar='SPK_SVR',
-              help='Speaker Server URL, \n \
-              ENV: SPK_SVR, default: tcp://localhost:9009')
-@click.option('--release_time', default=20,
-              envvar='RELEASE_TIME',
-              help='Release time for action, default=20, ENV: RELEASE_TIME')
+              envvar='MOB_SVR',
+              help='Mobotix Server Received URL, \n \
+              ENV: MOB_SVR, default: tcp://0.0.0.0:9009')
 @click.option('--amqp', default='amqp://guest:guest@rabbit:5672//',
               callback=validate_url,
               envvar='SVC_AMQP',
@@ -38,23 +34,13 @@ def validate_url(ctx, param, value):
               envvar='SVC_QID',
               help='ID for amqp queue name, default=0, ENV: SVC_QID')
 @click.option('--debug', is_flag=True)
-@click.option('--user', default='admin',
-              envvar='SVR_USER',
-              help='User name for speaker server, \
-              ENV: SVR_USER')
-@click.option('--passwd', default='admin',
-              envvar='SVR_PASSWD',
-              help='User passwd for speaker server, \
-              ENV: SVR_PASSWD')
-def main(spk_svr, release_time, amqp, port, qid, debug,
-         user, passwd):
+def main(mob_svr, amqp, port, qid, debug):
     """Publisher for PM-1 with IPP protocol"""
 
     click.echo("See more documentation at http://www.mingvale.com")
 
     info = {
-        'server url': spk_svr,
-        'release time': release_time,
+        'server url': mob_svr,
         'api_port': port,
         'amqp': amqp,
     }
@@ -66,7 +52,7 @@ def main(spk_svr, release_time, amqp, port, qid, debug,
 
     # main process
     try:
-        site = Mobotix(loop)
+        site = Mobotix(loop, tcp_svr=mob_svr)
         router = RouterMQ(outgoing_key='Alarms.mobotix',
                           # routing_keys=['Actions.mobotix'],
                           queue_name='mobotix_'+str(qid),
@@ -76,8 +62,6 @@ def main(spk_svr, release_time, amqp, port, qid, debug,
         api = Api(loop=loop, port=port, site=site, amqp=router)
         site.start()
         amqp_task = loop.create_task(router.reconnector())
-        # tcp_server = TcpServer(loop=loop, tcp_svr=spk_svr, site=site)
-        # tcp_server.start()
         api.start()
         loop.run_forever()
     except KeyboardInterrupt:
