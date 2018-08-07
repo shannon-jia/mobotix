@@ -1,4 +1,5 @@
-FROM cdrx/pyinstaller-linux:python3 AS build
+# FROM cdrx/pyinstaller-linux:python3 AS build
+FROM python:3.6 AS build
 
 RUN apt-get update
 ENV APP_NAME='sam-mobotix'
@@ -7,6 +8,7 @@ RUN mkdir /x_src
 WORKDIR /x_src
 ADD . /x_src
 RUN pip3 install .
+RUN pip install pyinstaller
 RUN pyinstaller --clean -y  --workpath /tmp  $APP_NAME.py -n $APP_NAME
 RUN mkdir -p /x_src/dist/$APP_NAME/asynqp
 RUN cp /usr/local/lib/*/*/asynqp/amqp*.xml /x_src/dist/$APP_NAME/asynqp/
