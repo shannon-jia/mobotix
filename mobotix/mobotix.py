@@ -17,15 +17,13 @@ class TcpServerProtocol(asyncio.Protocol):
     def connection_made(self, transport):
         peername = transport.get_extra_info('peername')
         log.info('Server: Connection from {}'.format(peername))
-        self.transport = transport
+        # self.transport = transport
 
     def data_received(self, data):
         log.info('Server: Data received: {!r}'.format(data))
         # mesg = json.loads(data)
         if self.callback:
             self.callback(data)
-
-        #self.transport.write(msg)
 
 
 class Mobotix():
@@ -39,12 +37,13 @@ class Mobotix():
         self.host = _url.hostname or '0.0.0.0'
         self.port = _url.port or 9009
 
-        self.publish = None
-
         coro = self.loop.create_server(
             lambda: TcpServerProtocol(callback=self.received),
             self.host, self.port)
         self.loop.run_until_complete(coro)
+
+        self.publish = None
+        self.num = 0
 
     def __str__(self):
         return "MOBOTIX"
@@ -62,20 +61,25 @@ class Mobotix():
         self._auto_loop()
 
     def _auto_loop(self):
+        self.num += 1
+        if self.num > 30:
+            self.num = 0
+            log.info('No message! Please waiting for 30 seconds...')
         self.loop.call_later(1, self._auto_loop)
 
     def received(self, data):
+        self.num = 0
         rep_msg = {}
         try:
             mesg = json.loads(data)
             if not mesg:
                 return
             rep_msg['type'] = 'Auxiliary Input'
-            rep_msg['name'] = mesg.get('camera')[4:]
+            rep_msg['name'] = 'PMIX_' + mesg.get('camera')[4:] + '_1'
             rep_msg['offset'] = 0
-            rep_msg['time_stamp'] = mesg.get('time_stamp')
+            rep_msg['time_stamp'] = mesg.get('time_stamp')[:19]
             rep_msg['source'] = 'publisher.protocols.ipp_host'
-            rep_msg['detail'] = mesg.get('mode')
+            rep_msg['detail'] = 0.0
             rep_msg['remark'] = 'MOBOTIX'
             self.send(rep_msg)
         except Exception as e:

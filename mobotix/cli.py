@@ -40,7 +40,7 @@ def main(mob_svr, amqp, port, qid, debug):
     click.echo("See more documentation at http://www.mingvale.com")
 
     info = {
-        'server url': mob_svr,
+        'server_url': mob_svr,
         'api_port': port,
         'amqp': amqp,
     }
@@ -53,8 +53,8 @@ def main(mob_svr, amqp, port, qid, debug):
     # main process
     try:
         site = Mobotix(loop, tcp_svr=mob_svr)
-        router = RouterMQ(outgoing_key='Alarms.mobotix',
-                          # routing_keys=['Actions.mobotix'],
+        router = RouterMQ(outgoing_key='Alarms.keeper',
+                          routing_keys=['Actions.mobotix'],
                           queue_name='mobotix_'+str(qid),
                           url=amqp)
         # router.set_callback(site.got_command)
@@ -69,6 +69,8 @@ def main(mob_svr, amqp, port, qid, debug):
             amqp_task.cancel()
             loop.run_until_complete(amqp_task)
         site.stop()
+    except Exception as e:
+        log.error(e)
     finally:
         loop.stop()
         loop.close()
