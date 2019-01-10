@@ -57,7 +57,7 @@ def main(mob_svr, amqp, port, qid, debug):
                           routing_keys=['Actions.mobotix'],
                           queue_name='mobotix_'+str(qid),
                           url=amqp)
-        # router.set_callback(site.got_command)
+        router.set_callback(site.got_command)
         site.set_publish(router.publish)
         api = Api(loop=loop, port=port, site=site, amqp=router)
         site.start()
