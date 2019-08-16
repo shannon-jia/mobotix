@@ -24,7 +24,9 @@ Install Package
 ===============
 
 **step1**: install python(version no less than 3.6)
+
 **step2**: make and enter virtualenv
+
 
 ```shell
 $ python -m venv env # make env
@@ -32,4 +34,5 @@ $ source env/bin/activate # enter env
 ```
 
 **step3**: install dependency packages `pip install -e .`
+
 **step4**: excution of command
